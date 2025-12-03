@@ -13,24 +13,24 @@ export class CalculationService {
     if (count === 0) return this.emptyAggregate();
 
     const sum = metrics.reduce((acc, m) => {
-      acc.cpu += m.cpu;
-      acc.gpu += m.gpu;
-      acc.ram += m.ram;
-      acc.disk += m.disk;
-      acc.networkIn += m.networkIn;
-      acc.networkOut += m.networkOut;
+      acc.cpuAvg += m.cpu;
+      acc.gpuAvg += m.gpu;
+      acc.ramAvg += m.ram;
+      acc.diskAvg += m.disk;
+      acc.networkInAvg += m.networkIn;
+      acc.networkOutAvg += m.networkOut;
       return acc;
     }, this.emptyAggregate());
 
     return {
       vmId: metrics[0].vmId,
       timestamp: Date.now(),
-      cpuAvg: +(sum.cpu / count).toFixed(2),
-      gpuAvg: +(sum.gpu / count).toFixed(2),
-      ramAvg: +(sum.ram / count).toFixed(2),
-      diskAvg: +(sum.disk / count).toFixed(2),
-      networkInAvg: +(sum.networkIn / count).toFixed(2),
-      networkOutAvg: +(sum.networkOut / count).toFixed(2),
+      cpuAvg: +(sum.cpuAvg / count).toFixed(2),
+      gpuAvg: +(sum.gpuAvg / count).toFixed(2),
+      ramAvg: +(sum.ramAvg / count).toFixed(2),
+      diskAvg: +(sum.diskAvg / count).toFixed(2),
+      networkInAvg: +(sum.networkInAvg / count).toFixed(2),
+      networkOutAvg: +(sum.networkOutAvg / count).toFixed(2),
       totalLogs: metrics.reduce((acc, m) => acc + m.logs.length, 0),
       totalTasks: metrics.reduce((acc, m) => acc + m.tasks.length, 0),
     };

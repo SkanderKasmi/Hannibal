@@ -1,0 +1,271 @@
+version: "3.9"
+
+services:
+  # ---------- Infra services ----------
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hannibal-net
+
+  mysql:
+    image: mysql:8
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: infra_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - hannibal-net
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - hannibal-net
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - hannibal-net
+
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - hannibal-net
+
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    container_name: zookeeper
+    restart: always
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+    ports:
+      - "2181:2181"
+    networks:
+      - hannibal-net
+
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: kafka
+    restart: always
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    networks:
+      - hannibal-net
+
+  # ---------- core gateway ----------
+  coreapp:
+    build: ./coreapp
+    container_name: coreapp
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MONGO_URI: mongodb://root:root@mongo:27017/coreapp?authSource=admin
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      KAFKA_BROKER: kafka:9092
+      REDIS_URL: redis://redis:6379
+      INFRA_SERVICE_URL: http://infraservice:3000
+      MONITOR_SERVICE_URL: http://monitorservice:3000
+      AUTH_SERVICE_URL: http://authservice:3000
+    depends_on:
+      - mongo
+      - rabbitmq
+      - kafka
+      - redis
+      - infraservice
+      - monitorservice
+      - authservice
+    ports:
+      - "3000:3000"
+    networks:
+      - hannibal-net
+
+  # ---------- Auth service ----------
+  authservice:
+    build: ./authservice
+    container_name: authservice
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: auth_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+    ports:
+      - "3001:3000"
+    networks:
+      - hannibal-net
+
+  # ---------- Infra service ----------
+  infraservice:
+    build: ./infraservice
+    container_name: infraservice
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DB: infra_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - mysql
+      - rabbitmq
+      - redis
+    ports:
+      - "3002:3000"
+    networks:
+      - hannibal-net
+
+  # ---------- Automation service ----------
+  automationservice:
+    build: ./automationservice
+    container_name: automationservice
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: automation_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+      INFRA_SERVICE_URL: http://infraservice:3000
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+      - infraservice
+    ports:
+      - "3003:3000"
+    networks:
+      - hannibal-net
+
+  # ---------- Agent service ----------
+  agentservice:
+    build: ./agentservice
+    container_name: agentservice
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - rabbitmq
+      - redis
+    ports:
+      - "3004:3000"
+    networks:
+      - hannibal-net
+
+  # ---------- Monitor service ----------
+  monitorservice:
+    build: ./monitorservice
+    container_name: monitorservice
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      KAFKA_BROKER: kafka:9092
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      INFRA_SERVICE_URL: http://infraservice:3000
+    depends_on:
+      - redis
+      - kafka
+      - rabbitmq
+      - infraservice
+    ports:
+      - "3005:3000"
+    networks:
+      - hannibal-net
+
+  # ---------- Report service ----------
+  reportservice:
+    build: ./reportservice
+    container_name: reportservice
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: report_db
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      MEGA_EMAIL: your-mega-email@example.com
+      MEGA_PASSWORD: your-mega-password
+    depends_on:
+      - postgres
+      - rabbitmq
+    ports:
+      - "3006:3000"
+    networks:
+      - hannibal-net
+
+networks:
+  hannibal-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mysql_data:
+  mongo_data:

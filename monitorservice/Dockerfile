@@ -1,4 +1,4 @@
-# coreapp/Dockerfile
+# monitorservice/Dockerfile
 FROM node:20-alpine AS builder
 
 WORKDIR /usr/src/app

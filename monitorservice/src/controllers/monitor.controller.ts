@@ -42,7 +42,7 @@ export class MonitorController {
     if (!metric) return { message: 'No metrics found for this VM' };
 
     // Enrich with VM and Resource Group names from Infra
-    const metadata = await this.infraBridge.getVmMetadata(vmId);
+    const metadata = await (this.infraBridge as any).getVmMetadata(vmId);
     return {
       ...metric,
       vmName: metadata.vmName,
@@ -66,7 +66,7 @@ export class MonitorController {
   @Get('report')
   async generateReport(@Query() dto: GenerateReportDto) {
     // dto: { vmId?: string, resourceGroupId?: string, from: string, to: string, type: 'pdf'|'excel' }
-    const reportUrl = await this.reportBridge.generate(dto);
+    const reportUrl = await this.reportBridge.generateReport(dto);
     return {
       message: 'Report generated successfully',
       url: reportUrl,

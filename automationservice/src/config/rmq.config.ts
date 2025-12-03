@@ -1,13 +1,23 @@
-import { ClientsModule, Transport } from '@nestjs/microservices';
+// src/config/rmq.config.ts
+import { Transport, RmqOptions, ClientOptions } from '@nestjs/microservices';
+import { loadEnv } from '../env/env.loader';
 
-export const RmqClientModule = ClientsModule.register([
-  {
-    name: 'AGENT_SERVICE',
-    transport: Transport.RMQ,
-    options: {
-      urls: [process.env.RMQ_URL || 'amqp://guest:guest@rabbitmq:5672'],
-      queue: 'agent_queue',
-      queueOptions: { durable: true },
-    },
+const env = loadEnv();
+
+export const rmqServerOptions: RmqOptions = {
+  transport: Transport.RMQ,
+  options: {
+    urls: [env.RABBITMQ_URL],
+    queue: 'automation-service',
+    queueOptions: { durable: true },
   },
-]);
+};
+
+export const agentClientOptions: ClientOptions = {
+  transport: Transport.RMQ,
+  options: {
+    urls: [env.RABBITMQ_URL],
+    queue: 'agent-service',
+    queueOptions: { durable: true },
+  },
+};
