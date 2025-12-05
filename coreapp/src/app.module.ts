@@ -18,6 +18,7 @@ import { AuthGatewayModule } from './modules/auth-gateway/auth-gateway.module';
 import { AgentGatewayModule } from './modules/agent-gateway/agent-gateway.module';
 import { RootController } from './controllers/root.controller';
 import { RootResolver } from './graphql/root.resolver'; // ⬅️ NEW
+import { AuthBridgeService } from './modules/auth-gateway/auth-bridge.service';
 
 @Module({
   controllers: [RootController],
@@ -51,10 +52,12 @@ import { RootResolver } from './graphql/root.resolver'; // ⬅️ NEW
     ReportGatewayModule,
     AgentGatewayModule,
     AuthGatewayModule,
+   
     HealthModule,
   ],
   providers: [
     JwtStrategy,
+     AuthBridgeService,
     RootResolver, // ⬅️ NEW
     {
       provide: APP_GUARD,

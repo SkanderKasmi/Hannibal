@@ -13,10 +13,11 @@ import {
 } from '@nestjs/common';
 import { AgentGatewayService, TaskType } from './agent-gateway.service';
 import { SessionGuard } from 'src/security/session.guard';
+import { RmqAuthGuard } from 'src/security/rmq-auth.guard';
 
 
 @Controller('agents')
-@UseGuards(SessionGuard)
+@UseGuards(RmqAuthGuard)
 export class AgentController {
   constructor(private readonly agent: AgentGatewayService) {}
 

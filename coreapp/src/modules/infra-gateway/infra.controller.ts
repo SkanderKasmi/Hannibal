@@ -2,10 +2,11 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { InfraGatewayService } from './infra-gateway.service';
 import { SessionGuard } from 'src/security/session.guard';
+import { RmqAuthGuard } from 'src/security/rmq-auth.guard';
 
 
 @Controller('infra')
-@UseGuards(SessionGuard)
+@UseGuards(RmqAuthGuard)
 export class InfraController {
   constructor(private readonly infra: InfraGatewayService) {}
 

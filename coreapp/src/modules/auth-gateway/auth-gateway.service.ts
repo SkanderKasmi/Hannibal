@@ -24,4 +24,5 @@ export class AuthGatewayService {
     const result = await firstValueFrom(res$);
     return !!result?.allowed;
   }
+  
 }

@@ -3,10 +3,11 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { ReportGatewayService } from './report-gateway.service';
 import { SessionGuard } from 'src/security/session.guard';
+import { RmqAuthGuard } from 'src/security/rmq-auth.guard';
 
 
 @Controller('reports')
-@UseGuards(SessionGuard)
+@UseGuards(RmqAuthGuard)
 export class ReportController {
   constructor(private readonly report: ReportGatewayService) {}
 

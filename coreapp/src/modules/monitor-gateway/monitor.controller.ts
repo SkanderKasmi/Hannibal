@@ -11,10 +11,11 @@ import {
 } from '@nestjs/common';
 import { MonitorGatewayService } from './monitor-gateway.service';
 import { SessionGuard } from 'src/security/session.guard';
+import { RmqAuthGuard } from 'src/security/rmq-auth.guard';
 
 
 @Controller('monitor')
-@UseGuards(SessionGuard)
+@UseGuards(RmqAuthGuard)
 export class MonitorController {
   constructor(private readonly monitor: MonitorGatewayService) {}
 

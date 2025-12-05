@@ -7,6 +7,7 @@ import { ReportModule } from './modules/report/report.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { CleanupService } from './services/cleanup.service';
 import { ReportAdminController } from './controllers/report-admin.controller';
+import { typeormConfig } from './config/typeorm.config';
 
 @Module({
   imports: [
@@ -17,18 +18,7 @@ import { ReportAdminController } from './controllers/report-admin.controller';
         '.env',
       ],
     }),
-    TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        type: 'postgres',
-        host: process.env.DB_HOST || 'localhost',
-        port: Number(process.env.DB_PORT || 5432),
-        username: process.env.DB_USER || 'postgres',
-        password: process.env.DB_PASSWORD || 'postgres',
-        database: process.env.DB_NAME || 'report_db',
-        entities: [Report],
-        synchronize: true, // ⚠️ false in real prod
-      }),
-    }),
+    TypeOrmModule.forRootAsync(typeormConfig),
     TypeOrmModule.forFeature([Report]),
     HealthModule,
     StorageModule,

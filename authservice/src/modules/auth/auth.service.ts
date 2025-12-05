@@ -12,10 +12,13 @@ import { RefreshToken } from '../../entities/refresh-token.entity';
 import { RegisterDto } from '../../dtos/register.dto';
 import { LoginDto } from '../../dtos/login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
   constructor(
+   
+    private readonly config: ConfigService,
     @InjectRepository(User)
     private readonly users: Repository<User>,
     @InjectRepository(RefreshToken)
@@ -76,10 +79,29 @@ export class AuthService {
     return tokens;
   }
 
-  async validateAccessToken(token: string) {
-    return this.jwt.verifyAsync(token, {
-      secret: process.env.JWT_ACCESS_SECRET || 'dev_access_secret_change_me',
-    });
+ async validateAccessToken(token: string) {
+    const adminToken = this.config.get<string>('ADMIN_TOKEN');
+
+    // 🔑 1. Master admin token shortcut
+    if (adminToken && token === adminToken) {
+      return {
+        sub: 'admin-fixed-id',
+        username: 'admin',
+        role: 'admin',
+        isAdminToken: true,
+      };
+    }
+
+    // 🔐 2. Normal JWT verification
+    try {
+      const payload = await this.jwt.verifyAsync(token, {
+        secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+      });
+
+      return payload; // must contain { sub, username, role, ... }
+    } catch (err) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 
   private async issueTokens(user: User) {
