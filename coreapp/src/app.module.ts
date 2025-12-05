@@ -1,5 +1,3 @@
-
-
 // src/app.module.ts
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -19,6 +17,7 @@ import { ReportGatewayModule } from './modules/report-gateway/report-gateway.mod
 import { AuthGatewayModule } from './modules/auth-gateway/auth-gateway.module';
 import { AgentGatewayModule } from './modules/agent-gateway/agent-gateway.module';
 import { RootController } from './controllers/root.controller';
+import { RootResolver } from './graphql/root.resolver'; // ⬅️ NEW
 
 @Module({
   controllers: [RootController],
@@ -43,6 +42,7 @@ import { RootController } from './controllers/root.controller';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       context: ({ req, res }) => ({ req, res }),
+      // playground/introspection you can tune later
     }),
 
     RmqClientsModule,
@@ -55,6 +55,7 @@ import { RootController } from './controllers/root.controller';
   ],
   providers: [
     JwtStrategy,
+    RootResolver, // ⬅️ NEW
     {
       provide: APP_GUARD,
       useClass: SessionGuard,

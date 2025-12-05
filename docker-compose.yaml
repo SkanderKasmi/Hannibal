@@ -1,4 +1,4 @@
-version: "3.9"
+# version: "3.9"
 
 services:
   # ---------- Infra services ----------
@@ -66,30 +66,24 @@ services:
     networks:
       - hannibal-net
 
-  zookeeper:
-    image: bitnami/zookeeper:3.9
-    container_name: zookeeper
-    restart: always
-    environment:
-      ALLOW_ANONYMOUS_LOGIN: "yes"
-    ports:
-      - "2181:2181"
-    networks:
-      - hannibal-net
-
+  # ---------- Apache Kafka (KRaft, no Zookeeper) ----------
   kafka:
-    image: bitnami/kafka:3.7
+    image: apache/kafka:3.7.1
     container_name: kafka
     restart: always
     environment:
-      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
-      KAFKA_CFG_LISTENERS: PLAINTEXT://:9092
-      ALLOW_PLAINTEXT_LISTENER: "yes"
-    depends_on:
-      - zookeeper
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
     ports:
       - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
     networks:
       - hannibal-net
 
@@ -108,6 +102,7 @@ services:
       INFRA_SERVICE_URL: http://infraservice:3000
       MONITOR_SERVICE_URL: http://monitorservice:3000
       AUTH_SERVICE_URL: http://authservice:3000
+      SESSION_SECRET: "HANNNIBAL_SUPER_LONG_SESSION_SECRET_123456"
     depends_on:
       - mongo
       - rabbitmq
@@ -269,3 +264,4 @@ volumes:
   postgres_data:
   mysql_data:
   mongo_data:
+  kafka_data:

@@ -10,6 +10,7 @@ import { JobModule } from './modules/job/job.module';
 import { AutomationRmqModule } from './modules/rmq/automation-rmq.module';
 import { HealthModule } from './health/health.module';
 import { AutomationController } from './controllers/automation.controller';
+import { buildAutomationDbConfig } from './config/db.config';
 
 @Module({
   imports: [
@@ -20,17 +21,8 @@ import { AutomationController } from './controllers/automation.controller';
         '.env',
       ],
     }),
-    TypeOrmModule.forRootAsync({
-      useFactory: () => ({
-        type: 'postgres',
-        host: process.env.DB_HOST || 'localhost',
-        port: Number(process.env.DB_PORT || 5432),
-        username: process.env.DB_USER || 'postgres',
-        password: process.env.DB_PASSWORD || 'postgres',
-        database: process.env.DB_NAME || 'automation_db',
-        entities: [Pipeline, Task, Job],
-        synchronize: true, // ⚠️ false in real prod
-      }),
+TypeOrmModule.forRootAsync({
+      useFactory: async () => buildAutomationDbConfig(),
     }),
     PipelineModule,
     JobModule,

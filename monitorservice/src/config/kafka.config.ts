@@ -5,7 +5,7 @@ import { MonitorSettings } from '../settings/monitor.settings';
 
 const env = loadEnv();
 
-export const kafkaMicroserviceOptions: KafkaOptions = {
+export const kafkaConfig: KafkaOptions = {
   transport: Transport.KAFKA,
   options: {
     client: {
@@ -16,7 +16,6 @@ export const kafkaMicroserviceOptions: KafkaOptions = {
       groupId: 'monitor-service-group',
     },
     subscribe: {
-      topics: [MonitorSettings.METRICS_TOPIC, MonitorSettings.LOGS_TOPIC],
       fromBeginning: false,
     },
   },

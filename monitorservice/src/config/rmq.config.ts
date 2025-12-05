@@ -4,7 +4,7 @@ import { loadEnv } from '../env/env.loader';
 
 const env = loadEnv();
 
-export const monitorRmqOptions: RmqOptions = {
+export const rmqConfig: RmqOptions = {
   transport: Transport.RMQ,
   options: {
     urls: [env.RABBITMQ_URL],
